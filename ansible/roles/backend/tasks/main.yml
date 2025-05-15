@@ -5,8 +5,16 @@
     state: directory
     mode: '0755'
 
+- name: Ensure /app/backend directory exists
+  file:
+    path: /app/backend
+    state: directory
+    mode: '0755'
+
 - name: Copy backend files
   copy:
-    src: "{{ project_root }}/backend"
-    dest: "{{ deploy_path }}"
-    remote_src: no
+    src: "{{ playbook_dir }}/../backend"
+    dest: /app/backend
+
+
+

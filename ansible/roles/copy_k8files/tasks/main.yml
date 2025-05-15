@@ -1,30 +1,25 @@
----
 - name: Create kubernetes directory
   file:
-    path: "{{ deploy_path }}/kubernetes"
+    path: /opt/mental-health/kubernetes
     state: directory
     mode: '0755'
 
 - name: Copy backend deployment YAML
   copy:
-    src: "{{ project_root }}/kubernetes/backend-deployment.yml"
-    dest: "{{ deploy_path }}/kubernetes/backend-deployment.yml"
-    remote_src: no
+    src: "{{ playbook_dir }}/../kubernetes/backend-deployment.yml"
+    dest: /opt/mental-health/kubernetes/backend-deployment.yml
 
 - name: Copy backend service YAML
   copy:
-    src: "{{ project_root }}/kubernetes/backend-service.yml"
-    dest: "{{ deploy_path }}/kubernetes/backend-service.yml"
-    remote_src: no
+    src: "{{ playbook_dir }}/../kubernetes/backend-service.yml"
+    dest: /opt/mental-health/kubernetes/backend-service.yml
 
 - name: Copy frontend deployment YAML
   copy:
-    src: "{{ project_root }}/kubernetes/frontend-deployment.yml"
-    dest: "{{ deploy_path }}/kubernetes/frontend-deployment.yml"
-    remote_src: no
+    src: "{{ playbook_dir }}/../kubernetes/frontend-deployment.yml"
+    dest: /opt/mental-health/kubernetes/frontend-deployment.yml
 
 - name: Copy frontend service YAML
   copy:
-    src: "{{ project_root }}/kubernetes/frontend-service.yml"
-    dest: "{{ deploy_path }}/kubernetes/frontend-service.yml"
-    remote_src: no
+    src: "{{ playbook_dir }}/../kubernetes/frontend-service.yml"
+    dest: /opt/mental-health/kubernetes/frontend-service.yml
