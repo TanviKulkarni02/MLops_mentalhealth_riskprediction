@@ -1,0 +1,35 @@
+---
+- name: Deploy Mental Health Application
+  hosts: localhost
+  connection: local
+  become: yes 
+
+  vars:
+    project_root: "/var/lib/jenkins/workspace/MentalHealthRiskPrediction"
+    deploy_path: "/opt/mental-health"
+    app_name: "mental-health"
+
+  roles:
+    - backend
+    - frontend
+    - copy_k8files
+    - k8s_deploy
+
+- name: Verify Services
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Wait for backend service to become healthy
+      uri:
+        url: http://localhost:{{ backend_port }}/health
+        return_content: yes
+      register: health_check
+      until: health_check.status == 200
+      retries: 10
+      delay: 5
+      ignore_errors: yes
+
+    - name: Show health check response
+      debug:
+        var: health_check.content
+

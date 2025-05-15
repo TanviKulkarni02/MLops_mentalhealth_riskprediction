@@ -1,0 +1,147 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_HUB_CREDS = credentials('docker-hub-credentials')
+        DOCKER_USERNAME = 'naman1301' // Replace with your Docker Hub username
+        BACKEND_SERVICE = 'mental-health-backend'
+        FRONTEND_SERVICE = 'mental-health-frontend'
+        BACKEND_PORT = '5001'
+        FRONTEND_PORT = '5003'
+        K8S_NAMESPACE = 'default'  // Update your Kubernetes namespace if needed
+        ANSIBLE_PLAYBOOK_PATH = 'ansible/playbook.yml' // Path to your Ansible playbook
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git(
+                    url: 'https://github.com/davenaman13/MLOpsSPE_MentalHealthRIskPrediction.git',
+                    branch: 'main',
+                    changelog: false,
+                    poll: false
+                )
+            }
+        }
+        
+        stage('Docker Login') {
+            steps {
+                script {
+                    sh '''
+                        echo "$DOCKER_HUB_CREDS_PSW" | docker login \
+                        -u "$DOCKER_HUB_CREDS_USR" \
+                        --password-stdin
+                    '''
+                }
+            }
+        }
+        
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    // Build backend image with username
+                    sh """
+                        docker build \
+                        -t ${DOCKER_USERNAME}/${BACKEND_SERVICE}:${env.BUILD_ID} \
+                        -f backend/Dockerfile \
+                        backend/
+                    """
+                    
+                    // Build frontend image with username
+                    sh """
+                        docker build \
+                        -t ${DOCKER_USERNAME}/${FRONTEND_SERVICE}:${env.BUILD_ID} \
+                        -f frontend/Dockerfile \
+                        frontend/
+                    """
+                }
+            }
+        }
+        
+        stage('Push Docker Images') {
+            steps {
+                script {
+                    // Push backend image to Docker Hub
+                    sh """
+                        docker push ${DOCKER_USERNAME}/${BACKEND_SERVICE}:${env.BUILD_ID}
+                    """
+                    
+                    // Push frontend image to Docker Hub
+                    sh """
+                        docker push ${DOCKER_USERNAME}/${FRONTEND_SERVICE}:${env.BUILD_ID}
+                    """
+                }
+            }
+        }
+        stage('Debug Workspace') {
+            steps {
+                script {
+                    echo "Current workspace: ${WORKSPACE}"
+                    sh "ls -R ${WORKSPACE}"  // List the entire workspace content to find the project root
+            }
+        }
+    }
+
+
+        stage('Deploy with Ansible') {
+            steps {
+                script {
+                    // Run Ansible playbook for deploying to Kubernetes
+                    sh """
+                        ansible-playbook -i ${WORKSPACE}/ansible/inventory.ini ${WORKSPACE}/ansible/playbook.yml
+                    """
+                }
+            }
+        }
+        
+        stage('Verify Backend Health') {
+            steps {
+                script {
+                    // Verify backend health endpoint
+                    sh """
+                        curl --retry 10 --retry-delay 5 \
+                        http://localhost:${BACKEND_PORT}/health \
+                        || exit 1
+                    """
+                }
+            }
+        }
+        
+        stage('Verify Frontend Availability') {
+            steps {
+                script {
+                    // Verify frontend availability
+                    sh """
+                        curl --retry 10 --retry-delay 5 \
+                        http://localhost:${FRONTEND_PORT} \
+                        || exit 1
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up Docker and logout
+            sh 'docker logout || true'
+            cleanWs()
+        }
+        success {
+            slackSend(
+                color: 'good',
+                message: """Deployment Successful!
+                |Backend API: http://your-server:5001
+                |Frontend App: http://your-server:5003
+                |Build Log: ${env.BUILD_URL}""".stripMargin()
+            )
+        }
+        failure {
+            slackSend(
+                color: 'danger',
+                message: """Deployment Failed!
+                |Check logs: ${env.BUILD_URL}""".stripMargin()
+            )
+        }
+    }
+}
