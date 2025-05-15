@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKER_HUB_CREDS = credentials('docker-hub-credentials')
-        DOCKER_USERNAME = 'naman1301' // Replace with your Docker Hub username
+        DOCKER_USERNAME = 'tanvikulkarni33' // Replace with your Docker Hub username
         BACKEND_SERVICE = 'mental-health-backend'
         FRONTEND_SERVICE = 'mental-health-frontend'
         BACKEND_PORT = '5001'
@@ -16,7 +16,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git(
-                    url: 'https://github.com/davenaman13/MLOpsSPE_MentalHealthRIskPrediction.git',
+                    url: 'https://github.com/TanviKulkarni02/MLops_mentalhealth_riskprediction.git',
                     branch: 'main',
                     changelog: false,
                     poll: false
