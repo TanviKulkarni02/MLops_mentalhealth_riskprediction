@@ -23,3 +23,8 @@
   copy:
     src: "{{ playbook_dir }}/../kubernetes/frontend-service.yml"
     dest: /opt/mental-health/kubernetes/frontend-service.yml
+
+- name: Copy ingress YAML
+  copy:
+    src: "{{ playbook_dir }}/../kubernetes/ingress.yml"
+    dest: /opt/mental-health/kubernetes/ingress.yml
