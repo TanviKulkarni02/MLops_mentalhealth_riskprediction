@@ -1,30 +1,48 @@
-- name: Create kubernetes directory
+---
+- name: Ensure kubernetes directory exists
   file:
-    path: /opt/mental-health/kubernetes
+    path: "{{ deploy_path }}/kubernetes"
     state: directory
     mode: '0755'
 
-- name: Copy backend deployment YAML
+- name: Copy backend deployment manifest
   copy:
-    src: "{{ playbook_dir }}/../kubernetes/backend-deployment.yml"
-    dest: /opt/mental-health/kubernetes/backend-deployment.yml
+    src: "{{ project_root }}/kubernetes/backend-deployment.yml"
+    dest: "{{ deploy_path }}/kubernetes/backend-deployment.yml"
+    remote_src: no
 
-- name: Copy backend service YAML
+- name: Copy backend service manifest
   copy:
-    src: "{{ playbook_dir }}/../kubernetes/backend-service.yml"
-    dest: /opt/mental-health/kubernetes/backend-service.yml
+    src: "{{ project_root }}/kubernetes/backend-service.yml"
+    dest: "{{ deploy_path }}/kubernetes/backend-service.yml"
+    remote_src: no
 
-- name: Copy frontend deployment YAML
+- name: Copy frontend deployment manifest
   copy:
-    src: "{{ playbook_dir }}/../kubernetes/frontend-deployment.yml"
-    dest: /opt/mental-health/kubernetes/frontend-deployment.yml
+    src: "{{ project_root }}/kubernetes/frontend-deployment.yml"
+    dest: "{{ deploy_path }}/kubernetes/frontend-deployment.yml"
+    remote_src: no
 
-- name: Copy frontend service YAML
+- name: Copy frontend service manifest
   copy:
-    src: "{{ playbook_dir }}/../kubernetes/frontend-service.yml"
-    dest: /opt/mental-health/kubernetes/frontend-service.yml
+    src: "{{ project_root }}/kubernetes/frontend-service.yml"
+    dest: "{{ deploy_path }}/kubernetes/frontend-service.yml"
+    remote_src: no
 
-- name: Copy ingress YAML
+- name: Copy ingress configuration
   copy:
-    src: "{{ playbook_dir }}/../kubernetes/ingress.yml"
-    dest: /opt/mental-health/kubernetes/ingress.yml
+    src: "{{ project_root }}/kubernetes/ingress.yml"
+    dest: "{{ deploy_path }}/kubernetes/ingress.yml"
+    remote_src: no
+
+- name: Copy backend HPA configuration
+  copy:
+    src: "{{ project_root }}/kubernetes/backend-hpa.yml"
+    dest: "{{ deploy_path }}/kubernetes/backend-hpa.yml"
+    remote_src: no
+
+- name: Copy frontend HPA configuration
+  copy:
+    src: "{{ project_root }}/kubernetes/frontend-hpa.yml"
+    dest: "{{ deploy_path }}/kubernetes/frontend-hpa.yml"
+    remote_src: no
