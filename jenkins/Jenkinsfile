@@ -1,6 +1,7 @@
 pipeline {
     agent any
     
+    // added credentials and running successfully
     environment {
         DOCKER_HUB_CREDS = credentials('docker-hub-credentials')
         DOCKER_USERNAME = 'tanvikulkarni33' // Replace with your Docker Hub username
@@ -10,7 +11,7 @@ pipeline {
         FRONTEND_PORT = '5003'
         K8S_NAMESPACE = 'default'  // Update your Kubernetes namespace if needed
         ANSIBLE_PLAYBOOK_PATH = 'ansible/playbook.yml' // Path to your Ansible playbook
-        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+        KUBECONFIG = '/var/lib/jenkins/.kube/config' // added kubeconfig environment variable so that jnekins and k8 can communicate
     }
     
     stages {
