@@ -36,9 +36,14 @@ pipeline {
                     def dockerUsername = sh(script: "vault kv get -field=username kv/mental-health/docker", returnStdout: true).trim()
                     def dockerPassword = sh(script: "vault kv get -field=password kv/mental-health/docker", returnStdout: true).trim()
 
+                    if (!dockerUsername || !dockerPassword) {
+                        error "Vault returned empty docker credentials!"
+                    }
+
                     echo "Fetched DOCKER_USERNAME: ${dockerUsername}"
                     echo "Fetched DOCKER_PASSWORD: [hidden]"
 
+                    // Export environment variables properly for subsequent stages
                     env.DOCKER_USERNAME = dockerUsername
                     env.DOCKER_PASSWORD = dockerPassword
                 }
@@ -48,8 +53,9 @@ pipeline {
         stage('Docker Login') {
             steps {
                 script {
+                    echo "Logging into Docker with user: ${env.DOCKER_USERNAME}"
                     sh """
-                        echo '${env.DOCKER_PASSWORD}' | docker login -u '${env.DOCKER_USERNAME}' --password-stdin
+                        echo "${env.DOCKER_PASSWORD}" | docker login -u "${env.DOCKER_USERNAME}" --password-stdin
                     """
                 }
             }
@@ -123,7 +129,7 @@ pipeline {
             cleanWs()
         }
         success {
-            // Make sure Slack plugin is installed or comment this out if not configured
+            // If you have slack plugin installed, this will notify Slack on success
             slackSend(
                 color: 'good',
                 message: """Deployment Successful!
