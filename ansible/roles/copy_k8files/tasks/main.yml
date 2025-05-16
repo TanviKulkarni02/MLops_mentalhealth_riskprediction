@@ -1,48 +1,41 @@
 ---
-- name: Ensure kubernetes directory exists
+- name: Verify kubernetes directory exists
+  stat:
+    path: "{{ k8s_dir }}"
+  register: k8s_dir_stat
+
+- name: Fail if kubernetes directory is missing
+  fail:
+    msg: "Kubernetes directory not found at {{ k8s_dir }}"
+  when: not k8s_dir_stat.stat.exists
+
+- name: Get list of required kubernetes files
+  set_fact:
+    required_k8s_files:
+      - backend-deployment.yml
+      - backend-service.yml
+      - frontend-deployment.yml
+      - frontend-service.yml
+      - ingress.yml
+      - backend-hpa.yml
+      - frontend-hpa.yml
+
+- name: Verify all required kubernetes files exist
+  assert:
+    that:
+      - lookup('file', k8s_dir + '/' + item) != ''
+    fail_msg: "Missing required kubernetes file: {{ item }} in {{ k8s_dir }}"
+  loop: "{{ required_k8s_files }}"
+
+- name: Create target kubernetes directory
   file:
     path: "{{ deploy_path }}/kubernetes"
     state: directory
     mode: '0755'
 
-- name: Copy backend deployment manifest
+- name: Copy kubernetes manifests
   copy:
-    src: "{{ project_root }}/kubernetes/backend-deployment.yml"
-    dest: "{{ deploy_path }}/kubernetes/backend-deployment.yml"
+    src: "{{ k8s_dir }}/{{ item }}"
+    dest: "{{ deploy_path }}/kubernetes/{{ item }}"
     remote_src: no
-
-- name: Copy backend service manifest
-  copy:
-    src: "{{ project_root }}/kubernetes/backend-service.yml"
-    dest: "{{ deploy_path }}/kubernetes/backend-service.yml"
-    remote_src: no
-
-- name: Copy frontend deployment manifest
-  copy:
-    src: "{{ project_root }}/kubernetes/frontend-deployment.yml"
-    dest: "{{ deploy_path }}/kubernetes/frontend-deployment.yml"
-    remote_src: no
-
-- name: Copy frontend service manifest
-  copy:
-    src: "{{ project_root }}/kubernetes/frontend-service.yml"
-    dest: "{{ deploy_path }}/kubernetes/frontend-service.yml"
-    remote_src: no
-
-- name: Copy ingress configuration
-  copy:
-    src: "{{ project_root }}/kubernetes/ingress.yml"
-    dest: "{{ deploy_path }}/kubernetes/ingress.yml"
-    remote_src: no
-
-- name: Copy backend HPA configuration
-  copy:
-    src: "{{ project_root }}/kubernetes/backend-hpa.yml"
-    dest: "{{ deploy_path }}/kubernetes/backend-hpa.yml"
-    remote_src: no
-
-- name: Copy frontend HPA configuration
-  copy:
-    src: "{{ project_root }}/kubernetes/frontend-hpa.yml"
-    dest: "{{ deploy_path }}/kubernetes/frontend-hpa.yml"
-    remote_src: no
+  loop: "{{ required_k8s_files }}"
