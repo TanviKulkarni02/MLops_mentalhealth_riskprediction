@@ -5,7 +5,7 @@ pipeline {
         VAULT_ADDR = 'http://127.0.0.1:8200'                // Vault address
         VAULT_TOKEN = credentials('vault-token')            // Jenkins credential ID for Vault token
 
-        // These will be populated in Fetch Secrets stage
+        // These will be populated in the 'Fetch Secrets from Vault' stage
         DOCKER_USERNAME = ''
         DOCKER_PASSWORD = ''
 
@@ -33,15 +33,14 @@ pipeline {
         stage('Fetch Secrets from Vault') {
             steps {
                 script {
-                    env.DOCKER_USERNAME = sh(
-                        script: "vault kv get -field=username kv/mental-health/docker",
-                        returnStdout: true
-                    ).trim()
+                    def dockerUsername = sh(script: "vault kv get -field=username kv/mental-health/docker", returnStdout: true).trim()
+                    def dockerPassword = sh(script: "vault kv get -field=password kv/mental-health/docker", returnStdout: true).trim()
 
-                    env.DOCKER_PASSWORD = sh(
-                        script: "vault kv get -field=password kv/mental-health/docker",
-                        returnStdout: true
-                    ).trim()
+                    echo "Fetched DOCKER_USERNAME: ${dockerUsername}"
+                    echo "Fetched DOCKER_PASSWORD: [hidden]"
+
+                    env.DOCKER_USERNAME = dockerUsername
+                    env.DOCKER_PASSWORD = dockerPassword
                 }
             }
         }
@@ -50,9 +49,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        echo "$DOCKER_PASSWORD" | docker login \
-                        -u "$DOCKER_USERNAME" \
-                        --password-stdin
+                        echo '${env.DOCKER_PASSWORD}' | docker login -u '${env.DOCKER_USERNAME}' --password-stdin
                     """
                 }
             }
@@ -62,10 +59,10 @@ pipeline {
             steps {
                 script {
                     sh """
-                        docker build -t ${DOCKER_USERNAME}/${BACKEND_SERVICE}:${env.BUILD_ID} -f backend/Dockerfile backend/
+                        docker build -t ${env.DOCKER_USERNAME}/${BACKEND_SERVICE}:${env.BUILD_ID} -f backend/Dockerfile backend/
                     """
                     sh """
-                        docker build -t ${DOCKER_USERNAME}/${FRONTEND_SERVICE}:${env.BUILD_ID} -f frontend/Dockerfile frontend/
+                        docker build -t ${env.DOCKER_USERNAME}/${FRONTEND_SERVICE}:${env.BUILD_ID} -f frontend/Dockerfile frontend/
                     """
                 }
             }
@@ -74,8 +71,8 @@ pipeline {
         stage('Push Docker Images') {
             steps {
                 script {
-                    sh "docker push ${DOCKER_USERNAME}/${BACKEND_SERVICE}:${env.BUILD_ID}"
-                    sh "docker push ${DOCKER_USERNAME}/${FRONTEND_SERVICE}:${env.BUILD_ID}"
+                    sh "docker push ${env.DOCKER_USERNAME}/${BACKEND_SERVICE}:${env.BUILD_ID}"
+                    sh "docker push ${env.DOCKER_USERNAME}/${FRONTEND_SERVICE}:${env.BUILD_ID}"
                 }
             }
         }
@@ -126,6 +123,7 @@ pipeline {
             cleanWs()
         }
         success {
+            // Make sure Slack plugin is installed or comment this out if not configured
             slackSend(
                 color: 'good',
                 message: """Deployment Successful!
