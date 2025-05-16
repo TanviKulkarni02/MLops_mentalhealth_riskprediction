@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     environment {
-        VAULT_ADDR = 'http://127.0.0.1:8200'         // Vault server URL
-        VAULT_TOKEN = credentials('vault-token')     // Vault token stored as Jenkins credential ID 'vault-token'
+        VAULT_ADDR = 'http://127.0.0.1:8200'                // Vault address
+        VAULT_TOKEN = credentials('vault-token')            // Jenkins credential ID for Vault token
 
+        // These will be populated in Fetch Secrets stage
         DOCKER_USERNAME = ''
         DOCKER_PASSWORD = ''
 
@@ -49,7 +50,9 @@ pipeline {
             steps {
                 script {
                     sh """
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        echo "$DOCKER_PASSWORD" | docker login \
+                        -u "$DOCKER_USERNAME" \
+                        --password-stdin
                     """
                 }
             }
@@ -88,12 +91,10 @@ pipeline {
 
         stage('Deploy with Ansible') {
             steps {
-                withEnv(["VAULT_ADDR=${env.VAULT_ADDR}", "VAULT_TOKEN=${env.VAULT_TOKEN}"]) {
-                    script {
-                        sh """
-                            ansible-playbook -i ${WORKSPACE}/ansible/inventory.ini ${WORKSPACE}/ansible/playbook.yml
-                        """
-                    }
+                script {
+                    sh """
+                        ansible-playbook -i ${WORKSPACE}/ansible/inventory.ini ${WORKSPACE}/ansible/playbook.yml
+                    """
                 }
             }
         }

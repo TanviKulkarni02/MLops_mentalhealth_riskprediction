@@ -28,13 +28,3 @@
   copy:
     src: "{{ playbook_dir }}/../kubernetes/ingress.yml"
     dest: /opt/mental-health/kubernetes/ingress.yml
-
-- name: Copy backend HPA YAML
-  copy:
-    src: "{{ playbook_dir }}/../kubernetes/backend-hpa.yml"
-    dest: /opt/mental-health/kubernetes/backend-hpa.yml
-
-- name: Copy frontend HPA YAML
-  copy:
-    src: "{{ playbook_dir }}/../kubernetes/frontend-hpa.yml"
-    dest: /opt/mental-health/kubernetes/frontend-hpa.yml

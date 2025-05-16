@@ -22,10 +22,4 @@
 # - name: Deploy ingress
 #   command: kubectl apply -f /opt/mental-health/kubernetes/ingress.yml --validate=false
 
-- name: Deploy Backend HPA
-  command: kubectl apply -f /opt/mental-health/kubernetes/backend-hpa.yml --validate=false
-
-- name: Deploy Frontend HPA
-  command: kubectl apply -f /opt/mental-health/kubernetes/frontend-hpa.yml --validate=false
-
 
