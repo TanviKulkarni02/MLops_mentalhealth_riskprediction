@@ -25,6 +25,8 @@ pipeline {
                 )
             }
         }
+        
+// merged the 2 stages into one and resolved docker login pipeline failure due to vault
 
         stage('Fetch Secrets & Docker Login') {
             steps {
